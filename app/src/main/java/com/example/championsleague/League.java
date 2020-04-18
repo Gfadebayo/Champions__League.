@@ -9,8 +9,8 @@ import java.util.List;
 public class League {
 
     private static League leagueInstance;
-    private final int[] TeamPoints = new int[4];
-    private final int[] GoalDifference = new int[4];
+    private int[] TeamPoints;
+    private int[] GoalDifference;
     private static final List<String> TeamName = new ArrayList<>();
     private String[] fixtureResult;
     private final List<String> winners = new ArrayList<>(3);
@@ -31,6 +31,9 @@ public class League {
     public void setTeamNames(String[] teamNames) {
 
         Collections.addAll(TeamName, teamNames);
+
+        TeamPoints = new int[teamNames.length];
+        GoalDifference = new int[teamNames.length];
     }
 
     public void teamResults() {
@@ -95,7 +98,7 @@ public class League {
     public String[] generateFixtures() {
         String[] newTeam = new String[TeamName.size()];
         newTeam = TeamName.toArray(newTeam);
-        String[] fixtures = new String[12];
+        List<String> fixtures = new ArrayList<>(12);
         int counter = 0;
         String fix;
 
@@ -107,18 +110,19 @@ public class League {
 
                 fix = newTeam[j] + " " + newTeam[k];
 
-                fixtures[counter] = fix;
+                fixtures.add(counter, fix);
 
 
                 fix = newTeam[k] + " " + newTeam[j];
 
-                fixtures[fixtures.length - counter - 1] = fix;
+                fixtures.add(fixtures.size() - 1, fix);
 
 
                 counter++;
             }
         }
-        return fixtures;
+        String[] fixture = new String[fixtures.size()];
+        return fixtures.toArray(fixture);
     }
 
     public void setAllResult(String[] getResult) {
