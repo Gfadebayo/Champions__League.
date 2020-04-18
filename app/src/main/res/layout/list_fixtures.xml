@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--suppress ALL -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center">
+
+
+        <TextView
+            android:id="@+id/text_home"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:text="TextView"
+            android:textAlignment="viewEnd"
+            android:textAllCaps="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@+id/edit_score_home"
+            app:layout_constraintEnd_toStartOf="@+id/edit_score_home"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/edit_score_home"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/vs_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:text="@string/vs_resource"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/edit_score_away"
+            app:layout_constraintStart_toEndOf="@+id/edit_score_home"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/edit_score_away"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="2"
+            android:inputType="number"
+            android:labelFor="@id/text_away"
+            android:textAlignment="center"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@+id/vs_text"
+            app:layout_constraintEnd_toStartOf="@+id/text_away"
+            app:layout_constraintStart_toEndOf="@+id/vs_text"
+            app:layout_constraintTop_toTopOf="@+id/vs_text"
+            tools:ignore="Autofill" />
+
+        <TextView
+            android:id="@+id/text_away"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="24dp"
+            android:gravity="start"
+            android:text="TextView"
+            android:textAlignment="viewStart"
+            android:textAllCaps="true"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@+id/edit_score_away"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/edit_score_away"
+            app:layout_constraintTop_toTopOf="@+id/edit_score_away"
+            tools:ignore="HardcodedText" />
+
+        <EditText
+            android:id="@+id/edit_score_home"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="2"
+            android:inputType="number"
+            android:labelFor="@id/text_home"
+            android:textAlignment="center"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@+id/vs_text"
+            app:layout_constraintEnd_toStartOf="@+id/vs_text"
+            app:layout_constraintStart_toEndOf="@+id/text_home"
+            app:layout_constraintTop_toTopOf="@+id/vs_text"
+            tools:ignore="Autofill" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>
