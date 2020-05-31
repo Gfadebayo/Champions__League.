@@ -1,139 +1,211 @@
 package com.example.championsleague;
 
-import android.app.usage.ConfigurationStats;
+import android.content.ContentProviderClient;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.text.InputType;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceManager;
 
+import com.example.championsleague.models.League;
+import com.example.championsleague.models.LeagueInfo;
+import com.example.championsleague.ui.ChampionFragment;
+import com.example.championsleague.ui.home.HomeFragment;
+import com.example.championsleague.ui.standing.StandingFragment;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.textfield.TextInputLayout;
+
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("ALL")
 public class TeamSelectionActivity extends AppCompatActivity {
 
-    private ConstraintLayout rootLayout;
-    private Button nextButton;
-    private FrameLayout frameLayout;
-    private List<Integer> teamIds;
+    private Fragment fragment;
+    private SharedPreferences.OnSharedPreferenceChangeListener listen;
+    public static final String TeamSelectionName = "com.example.championsLeague.IntentExtra";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_select_team);
+        setContentView(R.layout.activity_team);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        rootLayout = findViewById(R.id.layout_select_team);
-        final EditText noTeams = findViewById(R.id.team_number_edit);
-        Button submitButton = findViewById(R.id.submit_area);
-        frameLayout = findViewById(R.id.next_button_frame);
-        nextButton = findViewById(R.id.next);
-        final FrameLayout otherFrame = findViewById(R.id.scores_frame);
+        final NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.nav_view);
 
-        submitButton.setOnClickListener(new View.OnClickListener() {
+        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph())
+                .setDrawerLayout(drawerLayout).build();
+
+        NavigationUI.setupWithNavController(toolbar, navController, appBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
+
+        navController.addOnDestinationChangedListener(new NavController.OnDestinationChangedListener() {
             @Override
-            public void onClick(View v) {
-                initializeTeamViews(Integer.parseInt(noTeams.getText().toString()));
-                otherFrame.setVisibility(View.GONE);
-                frameLayout.setVisibility(View.VISIBLE);
+            public void onDestinationChanged(@NonNull NavController controller, @NonNull NavDestination destination, @Nullable Bundle arguments) {
+
+                changeNavDestination(destination);
             }
         });
 
+        SharedPreferences defPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        nextButton.setOnClickListener(new View.OnClickListener() {
+        defPref.registerOnSharedPreferenceChangeListener(listen = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
-            public void onClick(View v) {
-                League.getInstance().setTeamNames(organizeNames());
-                Intent nextIntent = new Intent(TeamSelectionActivity.this, TeamResultActivity.class);
-                startActivity(nextIntent);
-
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                String sharedString;
+                TextView tv;
+                switch(key){
+                    case ("fav_club"):
+                        sharedString = sharedPreferences.getString(key, "N/A");
+                        tv = findViewById(R.id.text_fav_team);
+                        postNewInfo(sharedString, tv);
+                        break;
+                    case ("fav_player"):
+                        sharedString = sharedPreferences.getString(key, "N/A");
+                        tv = findViewById(R.id.text_fav_player);
+                        postNewInfo(sharedString, tv);
+                        break;
+                    case ("fav_pos"):
+                        sharedString = sharedPreferences.getString(key, "N/A");
+                        tv = findViewById(R.id.text_fav_pos);
+                        postNewInfo(sharedString, tv);
+                        break;
+                    case ("fav_team_logo"):
+                        setLogo(Uri.parse(sharedPreferences.getString(key, null)));
+                        break;
+                }
             }
         });
     }
 
-    public String[] organizeNames() {
-        String[] allTeam = new String[teamIds.size()];
+    private void changeNavDestination(NavDestination destination) {
+//        Bundle bundleExtra = getIntent().getBundleExtra(TeamSelectionName);
+        int destId = destination.getId();
+        fragment = null;
 
-        for (int i = 0; i < allTeam.length; i++) {
-            EditText teamText = findViewById(teamIds.get(i));
-
-            allTeam[i] = teamText.getText().toString();
+        switch (destId) {
+            case R.id.nav_home:
+                fragment = new HomeFragment();
+//                fragment.setArguments(bundleExtra);
+                break;
+            case (R.id.nav_standing):
+                fragment = new StandingFragment();
+                break;
+            case (R.id.nav_settings):
+//                fragment = new SettingsActivity.SettingsFragment();
+                startActivity(new Intent(this, SettingsActivity.class));
+                return;
         }
 
-        return allTeam;
+        getSupportFragmentManager().beginTransaction().addToBackStack(null)
+                .setReorderingAllowed(true)
+                .replace(R.id.nav_host_fragment, fragment)
+                .commit();
     }
 
-    public void initializeTeamViews(int noOfViewsNeeded) {
+    public void setLogo(Uri imageData){
+        try {
+            ContentProviderClient client = getContentResolver().acquireContentProviderClient(imageData);
+            ParcelFileDescriptor rwt = client.openFile(imageData, "r");
+            final Bitmap imgBm = BitmapFactory.decodeFileDescriptor(rwt.getFileDescriptor());
 
-        Resources resources = getResources();
-        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8f, resources.getDisplayMetrics());
 
-        float pxx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 0f, resources.getDisplayMetrics());
-
-
-        teamIds = new ArrayList<>(noOfViewsNeeded);
-        for (int i = 0; i < noOfViewsNeeded; i++) {
-
-            String hint = "Team " + (i + 1);
-
-            EditText textView = new EditText(this);
-            ConstraintLayout.LayoutParams layoutParams = new ConstraintLayout.LayoutParams(ConstraintLayout.LayoutParams.WRAP_CONTENT, ConstraintLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.setMargins((int) pxx, (int) px, (int) pxx, (int) pxx);
-            textView.setLayoutParams(layoutParams);
-
-            textView.setId(textView.generateViewId());
-            teamIds.add(textView.getId());
-
-            textView.setInputType(InputType.TYPE_TEXT_VARIATION_SHORT_MESSAGE);
-            textView.setGravity(Gravity.START);
-            textView.setEms(5);
-            textView.setHint(hint);
-
-            rootLayout.addView(textView);
+            final ImageView img = findViewById(R.id.image_logo);
+            img.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    img.setImageBitmap(imgBm);
+                }
+            });
+        }catch(Exception e){
+            e.getMessage();
+            e.printStackTrace();
         }
 
-        ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(rootLayout);
+    }
 
-        EditText edit;
-        for (int i = 0; i < noOfViewsNeeded; i++) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_main_menu, menu);
 
-            edit = findViewById(teamIds.get(i));
+        return super.onCreateOptionsMenu(menu);
+//        return true;
+    }
 
-            if (i == 0) {
-                constraintSet.connect(teamIds.get(i), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-                constraintSet.connect(teamIds.get(i), ConstraintSet.BOTTOM, teamIds.get(i + 1), ConstraintSet.TOP);
-            } else if (i == noOfViewsNeeded - 1) {
-                constraintSet.connect(teamIds.get(i), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-                constraintSet.connect(teamIds.get(i), ConstraintSet.TOP, teamIds.get(i - 1), ConstraintSet.BOTTOM);
-            } else {
-                constraintSet.connect(teamIds.get(i), ConstraintSet.TOP, teamIds.get(i - 1), ConstraintSet.BOTTOM);
-                constraintSet.connect(teamIds.get(i), ConstraintSet.BOTTOM, teamIds.get(i + 1), ConstraintSet.TOP);
-            }
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        int itemId = item.getItemId();
 
-            constraintSet.connect(teamIds.get(i), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-            constraintSet.connect(teamIds.get(i), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+        if (itemId == R.id.action_team_select) {
+
+//            Intent nextIntent = new Intent(this, TeamResultActivity.class);
+//            nextIntent.putExtra(TeamResultActivity.SELECT_BACK, 1);
+//            startActivity(nextIntent);
+
+            finish();
+        }else if(itemId == R.id.action_setting){
+            startActivity(new Intent(this, SettingsActivity.class));
         }
 
-        constraintSet.connect(frameLayout.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-        constraintSet.connect(frameLayout.getId(), ConstraintSet.TOP, teamIds.get(teamIds.size() - 1), ConstraintSet.BOTTOM);
+        return NavigationUI.onNavDestinationSelected(item, navController) || super.onOptionsItemSelected(item);
+    }
 
-        constraintSet.applyTo(rootLayout);
+    public void updateFixtures(View v) {
+                ((HomeFragment) fragment).updateFixtures(true);
+    }
 
+    private void postNewInfo(final String newInfo, final TextView affectedView){
+        String prevText = affectedView.getText().toString();
+        final StringBuilder build = new StringBuilder(prevText);
+        int colIndec = build.indexOf(":") + 1;
+
+        build.replace(colIndec, affectedView.getText().length(), newInfo);
+        affectedView.setText(build.toString());
+//        boolean post = affectedView.getHandler().post(new Runnable() {
+//            @Override
+//            public void run() {
+////                affectedView.setText(build.toString());
+//            }
+//        });
     }
 
 }

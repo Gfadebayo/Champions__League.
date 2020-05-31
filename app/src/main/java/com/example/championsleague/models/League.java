@@ -1,4 +1,4 @@
-package com.example.championsleague;
+package com.example.championsleague.models;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,6 +54,7 @@ public class League {
     }
 
     public void pointAndGoaldiff(String[] first, String[] second) {
+        //home team wins if goal diff is > 0
         int goal_diff = Integer.parseInt(first[1]) - Integer.parseInt(second[1]);
 
         if (goal_diff > 0) {
