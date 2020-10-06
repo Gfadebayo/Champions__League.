@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Reply Preference -->
+
+    <string-array name="standing_values">
+        <item>Position</item>
+        <item>Name</item>
+        <item>Played</item>
+        <item>Wins</item>
+        <item>Draws</item>
+        <item>Losses</item>
+        <item>Goal Difference</item>
+        <item>Points</item>
+    </string-array>
+</resources>

@@ -1,5 +1,4 @@
 <resources >
-    <dimen name="pixel_size_8">6px</dimen>
-    <dimen name="pixel_size_0">0px</dimen>
-    <dimen name="text_line">2dp</dimen>
+    <dimen name="max_image_height">60dp</dimen>
+    <dimen name="max_image_width">90dp</dimen>
 </resources>

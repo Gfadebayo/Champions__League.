@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:label="Select Teams"
+        tools:layout="@layout/fragment_team_select"
+        android:name="com.example.championsleague.fragments.TeamSelectionFragment">
+        <action
+            android:id="@+id/action_nav_home_to_nav_fixtures"
+            app:destination="@id/nav_fixtures" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_fixtures"
+        android:label="Fixtures"
+        tools:layout="@layout/fragment_fixture"
+        android:name="com.example.championsleague.fragments.FixtureFragment" />
+
+
+    <fragment
+        android:id="@+id/nav_standing"
+        android:label="Standing"
+        tools:layout="@layout/fragment_standing"
+        android:name="com.example.championsleague.fragments.StandingFragment"/>
+</navigation>
