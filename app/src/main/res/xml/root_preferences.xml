@@ -1,0 +1,81 @@
+<!--
+  ~ Copyright 2018 The app Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="@string/team_selection_settings">
+
+        <EditTextPreference
+            android:title="Max number of teams"
+            android:defaultValue="20"
+            android:key="KEY_MAX_TEAM"
+            android:enabled="true"
+            app:useSimpleSummaryProvider="true"/>
+
+        <CheckBoxPreference
+            android:title="Ignore Team Name Casing"
+            android:key="KEY_IGNORE_CASING"
+            android:summaryOff="Upper and Lower casing of names will be treated the same"
+            android:summaryOn="Upper and Lower casing of names will be treated differently"
+            android:defaultValue="false" />
+
+        <EditTextPreference
+            android:title="Leagues to Fetch"
+            android:key="KEY_LEAGUE"
+            android:summary="Enter the country whose leagues will be displayed. Separate each entry with a comma alone"
+            android:defaultValue="England,Spain,Germany,France" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Fixture Setting">
+
+        <SwitchPreferenceCompat
+            android:key="KEY_IMAGE"
+            android:title="Show Images"
+            android:defaultValue="true"/>
+
+        <EditTextPreference
+            android:title="Length of Team Names"
+            android:defaultValue="3"
+            android:key="KEY_NAME_LENGTH"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Standing Setting" >
+
+        <MultiSelectListPreference
+            android:title="Table Headers to remove"
+            android:summary="Information shown in the Table"
+            android:key="KEY_TABLE_INFO"
+            android:entries="@array/standing_values"
+            android:entryValues="@array/standing_values"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory>
+        <Preference
+            android:title="Reset Fixture Filter"
+            android:key="KEY_RESET_FILTER"/>
+
+        <Preference
+            app:title="Reset Database"
+            android:key="KEY_RESET_DB" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

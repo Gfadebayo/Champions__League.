@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="fragment"
+            type="com.example.championsleague.fragments.TeamSelectionFragment" />
+    </data>
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/constraint_buttons"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_existing_teams"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="@{fragment}"
+        android:text="@string/use_existing_teams"
+        app:layout_constraintBottom_toTopOf="@+id/button_create_league"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_create_league"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="8dp"
+        android:onClick="@{fragment}"
+        android:text="@string/create_league"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/button_existing_teams"
+        app:layout_constraintStart_toEndOf="@+id/button_update_league"
+        app:layout_constraintTop_toBottomOf="@+id/button_existing_teams"
+        app:layout_constraintVertical_bias="0.0" />
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_update_league"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:onClick="@{fragment}"
+        android:text="@string/update_league"
+        app:layout_constraintBottom_toBottomOf="@id/button_create_league"
+        app:layout_constraintEnd_toStartOf="@id/button_create_league"
+        app:layout_constraintStart_toStartOf="@id/button_existing_teams"
+        app:layout_constraintTop_toTopOf="@id/button_create_league" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

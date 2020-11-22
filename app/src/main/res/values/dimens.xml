@@ -1,1 +1,4 @@
-<resources />
+<resources >
+    <dimen name="max_image_height">60dp</dimen>
+    <dimen name="max_image_width">90dp</dimen>
+</resources>

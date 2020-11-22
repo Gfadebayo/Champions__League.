@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+        <variable
+            name="team"
+            type="com.example.championsleague.models.TeamInfo" />
+    </data>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_table_position"
+            style="@style/Widget.MaterialComponents.TextView.TableTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_column="0"
+            android:layout_weight="1"
+            android:text='@{team == null ? "Pos" : String.valueOf(team.position)}' />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_table_name"
+            style="@style/Widget.MaterialComponents.TextView.TableTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_column="1"
+            android:layout_weight="2"
+            android:text='@{team == null ? "Team" : team.name}' />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_table_played"
+            style="@style/Widget.MaterialComponents.TextView.TableTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_column="2"
+            android:layout_weight="1"
+            android:text='@{team == null ? "Pl" : String.valueOf(team.played)}' />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_table_wins"
+            style="@style/Widget.MaterialComponents.TextView.TableTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_column="3"
+            android:layout_weight="1"
+            android:text='@{team == null ? "W" : String.valueOf(team.wins)}' />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_table_draws"
+            style="@style/Widget.MaterialComponents.TextView.TableTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_column="4"
+            android:layout_weight="1"
+            android:text='@{team == null ? "D" : String.valueOf(team.draws)}' />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_table_loss"
+            style="@style/Widget.MaterialComponents.TextView.TableTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_column="5"
+            android:layout_weight="1"
+            android:text='@{team == null ? "L" : String.valueOf(team.losses)}' />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_table_goal_diff"
+            style="@style/Widget.MaterialComponents.TextView.TableTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_column="6"
+            android:layout_weight="1"
+            android:text='@{team == null ? "GD" : String.valueOf(team.goal_diff)}' />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/text_table_point"
+            style="@style/Widget.MaterialComponents.TextView.TableTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_column="7"
+            android:layout_weight="1"
+            android:text='@{team == null ? "Pts" : String.valueOf(team.points)}' />
+    </TableRow>
+</layout>

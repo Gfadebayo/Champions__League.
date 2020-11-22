@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':viewholderanimator'
 rootProject.name='Champions League'
