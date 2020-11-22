@@ -19,11 +19,10 @@ import com.example.championsleague.databinding.TeamSelectButtonBinding;
 import com.example.championsleague.databinding.TeamTextViewBinding;
 import com.example.championsleague.fragments.TeamSelectionFragment;
 import com.example.championsleague.models.FixtureInfo;
-import com.example.championsleague.models.LeagueInfo;
+import com.example.championsleague.utils.LeagueUtils;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
-
-import org.angmarch.views.NiceSpinner;
+import com.skydoves.powerspinner.PowerSpinnerView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,7 +106,7 @@ public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHo
             List<String> obs = new ArrayList<>(obsoleteTeams);
             obs.forEach(team -> {
                 List<FixtureInfo> fixtures = mRepository.getCompletedFixtures(team);
-                LeagueInfo.batchUpdateDb(fixtures, mRepository, false);
+                LeagueUtils.batchUpdateDb(fixtures, mRepository, false);
             });
 
             mRepository.deleteTeam(obsoleteTeams.toArray(new String[0]));
@@ -220,7 +219,7 @@ public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHo
 //                FileUtils.deleteImage(removedTeam, mFragment.requireContext().getExternalFilesDir(FileUtils.TEAMS_LOGO_DIR));
                 List<FixtureInfo> removedFixtures = mRepository.getCompletedFixtures(removedTeam);
 
-                LeagueInfo.batchUpdateDb(removedFixtures, mRepository, false);
+                LeagueUtils.batchUpdateDb(removedFixtures, mRepository, false);
 
                 mRepository.deleteTeam(removedTeam);
 
@@ -230,10 +229,10 @@ public class TeamListAdapter extends RecyclerView.Adapter<TeamListAdapter.ViewHo
                 if (mTeams.size() >= pos) {
                     mTeams.remove(pos);
 
-                    List<Integer> ada = mFragment.mItems;
+                    List<String> ada = mFragment.mItems;
 
-                    int indexPos = ada.indexOf(mTeams.size());
-                    ((NiceSpinner) mFragment.mRootBinding.getRoot().findViewById(R.id.spinner_teams)).setSelectedIndex(indexPos);
+                    int indexPos = ada.indexOf(String.valueOf(mTeams.size()));
+                    ((PowerSpinnerView) mFragment.mRootBinding.getRoot().findViewById(R.id.spinner_teams)).selectItemByIndex(indexPos);
                 }
             });
 

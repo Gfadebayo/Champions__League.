@@ -18,7 +18,7 @@ import androidx.lifecycle.SavedStateHandle;
 import com.example.championsleague.LocalPersistence;
 import com.example.championsleague.R;
 import com.example.championsleague.adapters.FixtureAdapter;
-import com.example.championsleague.models.LeagueInfo;
+import com.example.championsleague.utils.LeagueUtils;
 import com.example.championsleague.utils.FileUtils;
 import com.example.championsleague.database.LeagueRepository;
 import com.example.championsleague.models.FixtureInfo;
@@ -177,7 +177,7 @@ public class FixtureViewModel extends AndroidViewModel{
     public void undo(FixtureAdapter adapter){
         FixtureInfo submittedFixture = mRepo.getLastCompletedFixture();
 
-        LeagueInfo.updateDb(submittedFixture, mRepo, false);
+        LeagueUtils.updateDb(submittedFixture, mRepo, false);
 
         ArrayList<FixtureInfo> newList = new ArrayList<>(adapter.getCurrentList());
         newList.add(submittedFixture);
@@ -187,7 +187,7 @@ public class FixtureViewModel extends AndroidViewModel{
 
     public void performSubmission(final List<FixtureInfo> fixture){
         if(fixture.isEmpty()) return;
-        LeagueInfo.batchUpdateDb(fixture, mRepo, true);
+        LeagueUtils.batchUpdateDb(fixture, mRepo, true);
     }
 
     public void registerPrefObserver(LifecycleOwner o){

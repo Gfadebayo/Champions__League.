@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         FileUtils.transferToDisk(getAssets(), getExternalFilesDir(null));
+        FileUtils.transformTxTtoJson(this);
 
         final NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         BottomNavigationView bottomView = findViewById(R.id.bottom_nav_view);

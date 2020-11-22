@@ -18,6 +18,7 @@ import androidx.lifecycle.SavedStateViewModelFactory;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.PreferenceManager;
 
+import com.example.championsleague.Animators.ItemAnimator;
 import com.example.championsleague.databinding.TeamTextViewBinding;
 import com.example.championsleague.utils.DialogUtils;
 import com.example.championsleague.viewmodels.SelectionViewModel;
@@ -26,12 +27,12 @@ import com.example.championsleague.utils.FileUtils;
 import com.example.championsleague.adapters.TeamListAdapter;
 import com.example.championsleague.databinding.FragmentTeamSelectBinding;
 import com.example.championsleague.models.FixtureInfo;
-import com.example.championsleague.models.LeagueInfo;
+import com.example.championsleague.utils.LeagueUtils;
 import com.example.championsleague.models.TeamInfo;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
-
-import org.angmarch.views.NiceSpinner;
+import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
+import com.skydoves.powerspinner.PowerSpinnerView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,8 +51,8 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
 
     private SelectionViewModel mViewModel;
     private TeamListAdapter mAdapter;
-    public List<Integer> mItems;
-    private NiceSpinner mSpinner;
+    public List<String> mItems;
+    private PowerSpinnerView mSpinner;
 
     private SharedPreferences mPref;
 
@@ -62,7 +63,6 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
         mViewModel = new ViewModelProvider(requireActivity(), new SavedStateViewModelFactory(
                 requireActivity().getApplication(), this)).get(SelectionViewModel.class);
         mViewModel.initialHandleValues();
-        mViewModel.watchTeamChanges(requireActivity());
 
         setRetainInstance(true);
         mPref = PreferenceManager.getDefaultSharedPreferences(requireContext());
@@ -70,10 +70,10 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
     }
 
     private void setSpinnerValues(SharedPreferences pref){
-        mItems = IntStream.range(4, Integer.parseInt(pref.getString("KEY_MAX_TEAM",  "100"))+1).boxed().collect(Collectors.toList());
-        mItems.add(0, 0);
+        mItems = IntStream.range(4, Integer.parseInt(pref.getString("KEY_MAX_TEAM",  "100"))+1).boxed().map(f -> String.valueOf(f)).collect(Collectors.toList());
+        mItems.add(0, "0");
 
-        mSpinner.attachDataSource(mItems);
+        mSpinner.setItems(mItems);
     }
 
     @Nullable
@@ -82,6 +82,7 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
         View root = inflater.inflate(R.layout.fragment_team_select, container, false);
         mRootBinding = FragmentTeamSelectBinding.bind(root);
         mRootBinding.setFragment(this);
+
         return root;
     }
 
@@ -91,23 +92,23 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
         mAdapter = new TeamListAdapter(mViewModel.getTeamNames(), this);
 
         mRootBinding.listTeams.setAdapter(mAdapter);
+
         mSpinner = mRootBinding.getRoot().findViewById(R.id.spinner_teams);
         setSpinnerValues(mPref);
 
-        int count = mItems.indexOf(mAdapter.getItemCount()-1);
-        count = count == -1 ? mItems.indexOf(mItems.size()-1) : count;
-        Log.i("Selection", String.valueOf(mItems.indexOf(count)));
-        mSpinner.setSelectedIndex(mItems.indexOf(count < 4 ? 0 : count));
+        int count = mItems.indexOf(String.valueOf(mAdapter.getItemCount()-1));
+        count = count == -1 ? mItems.indexOf(String.valueOf(mItems.size()-1)) : count;
+        Log.i("Selection", String.valueOf(mItems.indexOf(String.valueOf(count))));
+        mSpinner.selectItemByIndex((mItems.indexOf(String.valueOf(count < 4 ? 0 : count))));
 
         setSpinnerVariables();
     }
 
     private void setSpinnerVariables() {
 
-        mSpinner.setOnSpinnerItemSelectedListener((parent, view, position, id) -> {
-            int value = (Integer) parent.getItemAtPosition(position);
-            mAdapter.updateTeamSize(value);
-            mViewModel.setSpinnerPosition(position);
+        mSpinner.setOnSpinnerItemSelectedListener((OnSpinnerItemSelectedListener<String>) (i, value) -> {
+            mAdapter.updateTeamSize(Integer.parseInt(value));
+            mViewModel.setSpinnerPosition(i);
             mViewModel.setNewTeamName(mAdapter.getList());
         });
     }
@@ -120,8 +121,8 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
 
         mAdapter.addTeams(new ArrayList<>(teamList));
 
-        int index = mItems.indexOf(mAdapter.getItemCount()-1);
-        mSpinner.setSelectedIndex(index);
+        int index = mItems.indexOf(String.valueOf(mAdapter.getItemCount()-1));
+        mSpinner.selectItemByIndex(index);
     }
 
     @Override
@@ -148,10 +149,10 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
     public void onClick(View v) {
 
         if(v.getId() == R.id.button_create_league || v.getId() == R.id.button_update_league){
-            int num = (Integer) mSpinner.getSelectedItem();
+            int num = mSpinner.getSelectedIndex();
             if(num == 0){
                 Toast.makeText(requireContext(), "At least 4 teams need to be Selected", Toast.LENGTH_SHORT).show();
-                mSpinner.setSelectedIndex(1);
+                mSpinner.selectItemByIndex(1);
                 return;
             }
         }
@@ -162,10 +163,10 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
                 AlertDialog waitDialog = DialogUtils.pleaseWaitDialog(TeamSelectionFragment.this);
                 waitDialog.show();
 
-                List<TeamInfo> teams = LeagueInfo.createTeams(mAdapter.getList(), null);
+                List<TeamInfo> teams = LeagueUtils.createTeams(mAdapter.getList(), null);
 
                 List<String> teamNames = teams.stream().map(TeamInfo::getName).collect(Collectors.toList());
-                List<FixtureInfo> fixtures = LeagueInfo.createFixtures(teamNames, null);
+                List<FixtureInfo> fixtures = LeagueUtils.createFixtures(teamNames, null);
 
                 mViewModel.insertDbData(waitDialog, teams, fixtures, this);
                 mViewModel.addToTeamsDb(teams);
@@ -193,13 +194,13 @@ public class TeamSelectionFragment extends Fragment implements View.OnClickListe
             dbTeams = mViewModel.dbTeamNames();
 
             //TODO: Fix this, so that instead of removing all the fixtures and teams, you simply update with the new ones
-            List<TeamInfo> newTeams = LeagueInfo.createTeams(mAdapter.getList(), dbTeams);
+            List<TeamInfo> newTeams = LeagueUtils.createTeams(mAdapter.getList(), dbTeams);
             mViewModel.addToTeamsDb(newTeams);
 
             List<String> allTeams = new ArrayList<>(dbTeams);
             allTeams.addAll(newTeams.parallelStream().map(TeamInfo::getName).distinct().collect(Collectors.toList()));
 
-            List<FixtureInfo> newFixtures = LeagueInfo.createFixtures(allTeams, dbTeams);
+            List<FixtureInfo> newFixtures = LeagueUtils.createFixtures(allTeams, dbTeams);
 
             mViewModel.addToFixturesDb(newFixtures);
         });

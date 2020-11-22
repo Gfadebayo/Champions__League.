@@ -1,8 +1,10 @@
-package com.example.championsleague.models;
+package com.example.championsleague.utils;
 
 import androidx.annotation.Nullable;
 
 import com.example.championsleague.database.LeagueRepository;
+import com.example.championsleague.models.FixtureInfo;
+import com.example.championsleague.models.TeamInfo;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +13,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class LeagueInfo {
+public class LeagueUtils {
 
     /**
      * creates FixtureInfo objects from the given TeamInfo objects. The objects created are given wrong fixture numbers
@@ -68,7 +70,7 @@ public class LeagueInfo {
      * @param oldTeamNames Old teams from the database if present in order to prevent recreation
      * @return A list of team info created from @params teams
      */
-    public static List<TeamInfo> createTeams(final List<String> teams,@Nullable final List<String> oldTeamNames){
+    public static List<TeamInfo> createTeams(final List<String> teams, @Nullable final List<String> oldTeamNames){
 
                Collections.sort(teams);
                List<TeamInfo> leagueTeams = new ArrayList<>();

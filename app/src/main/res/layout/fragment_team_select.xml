@@ -37,16 +37,10 @@
                     android:text="Select the number of Teams:"
                     android:textColor="@android:color/black" />
 
-                <org.angmarch.views.NiceSpinner
+                <include layout="@layout/default_spinner"
                     android:id="@+id/spinner_teams"
-                    style="@style/Base.Widget.MaterialComponents.TextView.NiceSpinner"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
-                    android:spinnerMode="dropdown"
-                    android:textAlignment="viewStart"
-                    app:dropDownListPaddingBottom="0dp"
-                    app:popupTextAlignment="start" />
+                    android:layout_height="wrap_content" />
 
             </LinearLayout>
 

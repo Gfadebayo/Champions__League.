@@ -25,7 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.championsleague.adapters.FixtureAdapter;
 import com.example.championsleague.R;
 import com.example.championsleague.models.FixtureInfo;
-import com.example.championsleague.models.LeagueInfo;
+import com.example.championsleague.utils.LeagueUtils;
 import com.example.championsleague.viewmodels.FixtureViewModel;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -99,7 +99,7 @@ public class FixtureFragment extends Fragment implements FilterDialogFragment.On
         String fix = String.format("Fixture %s has no Score", fixNo.getFixtureNo());
 
         return Snackbar.make(anchor, fix, Snackbar.LENGTH_SHORT).setAction("Predict", v -> {
-            List<int[]> scores = LeagueInfo.generateRandomScores(1);
+            List<int[]> scores = LeagueUtils.generateRandomScores(1);
             fixNo.setHomeScore(scores.get(0)[0]);
             fixNo.setAwayScore(scores.get(0)[1]);
             startMassSubmit();
@@ -169,7 +169,7 @@ public class FixtureFragment extends Fragment implements FilterDialogFragment.On
     private void predictScores() {
 
         List<FixtureInfo> currentFixtures = new ArrayList<>(mAdapter.getCurrentList());
-        List<int[]> predictedScores = LeagueInfo.generateRandomScores(currentFixtures.size());
+        List<int[]> predictedScores = LeagueUtils.generateRandomScores(currentFixtures.size());
         SparseArray<int[]> sparseScores = new SparseArray<>(currentFixtures.size());
         for(int i = 0; i < currentFixtures.size(); i++) {
             FixtureInfo f = currentFixtures.get(i);

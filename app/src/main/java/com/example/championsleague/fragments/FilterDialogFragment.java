@@ -16,8 +16,8 @@ import com.example.championsleague.R;
 import com.example.championsleague.viewmodels.FixtureViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.checkbox.MaterialCheckBox;
-
-import org.angmarch.views.NiceSpinner;
+import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
+import com.skydoves.powerspinner.PowerSpinnerView;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,8 +31,8 @@ public class FilterDialogFragment extends BottomSheetDialogFragment {
 
     //This is used as the names of teams is required and this provides it easily
     private FixtureViewModel mViewModel;
-    private NiceSpinner mLegSpinner;
-    private NiceSpinner mLocSpinner;
+    private PowerSpinnerView mLegSpinner;
+    private PowerSpinnerView mLocSpinner;
     private GridLayout mGridTeams;
 
     public static FilterDialogFragment dialogInstance(){
@@ -66,8 +66,8 @@ public class FilterDialogFragment extends BottomSheetDialogFragment {
 
         view.findViewById(R.id.image_filter_clear).setOnClickListener(v -> {
 //            mViewModel.setQuery("SELECT * FROM Fixtures");
-            mLegSpinner.setSelectedIndex(2);
-            mLocSpinner.setSelectedIndex(2);
+            mLegSpinner.selectItemByIndex(2);
+            mLocSpinner.selectItemByIndex(2);
             int all = mGridTeams.getChildCount();
             IntStream.range(0, all).forEach(i -> ((MaterialCheckBox)mGridTeams.getChildAt(i)).setChecked(true));
         });
@@ -77,15 +77,14 @@ public class FilterDialogFragment extends BottomSheetDialogFragment {
         String query = mViewModel.getQuery();
 
         mLegSpinner = parent.findViewById(R.id.spinner_leg);
-        mLegSpinner.attachDataSource(Arrays.asList("Leg 1", "Leg 2", "Both"));
+        mLegSpinner.setItems(Arrays.asList("Leg 1", "Leg 2", "Both"));
 
-        if(query.contains("leg=1")) mLegSpinner.setSelectedIndex(0);
-        else if(query.contains("leg=2")) mLegSpinner.setSelectedIndex(1);
-        else mLegSpinner.setSelectedIndex(2);
+        if(query.contains("leg=1")) mLegSpinner.selectItemByIndex(0);
+        else if(query.contains("leg=2")) mLegSpinner.selectItemByIndex(1);
+        else mLegSpinner.selectItemByIndex(2);
 
-        mLegSpinner.setOnSpinnerItemSelectedListener((parent1, view, position, id) ->{
-            String s = (String) parent1.getItemAtPosition(position);
-            mOnClick.onItemClicked(s, parent1.getId(), null);
+        mLegSpinner.setOnSpinnerItemSelectedListener((OnSpinnerItemSelectedListener<String>) (i, s) -> {
+            mOnClick.onItemClicked(s, mLegSpinner.getId(), null);
         });
     }
 
@@ -93,15 +92,14 @@ public class FilterDialogFragment extends BottomSheetDialogFragment {
         String query = mViewModel.getQuery();
 
         mLocSpinner = parent.findViewById(R.id.spinner_location);
-        mLocSpinner.attachDataSource(Arrays.asList("Home Only", "Away Only", "Both"));
+        mLocSpinner.setItems(Arrays.asList("Home Only", "Away Only", "Both"));
 
-        if(query.contains("away") && query.contains("home")) mLocSpinner.setSelectedIndex(2);
-        else if(query.contains("home")) mLocSpinner.setSelectedIndex(0);
-        else mLocSpinner.setSelectedIndex(1);
+        if(query.contains("away") && query.contains("home")) mLocSpinner.selectItemByIndex(2);
+        else if(query.contains("home")) mLocSpinner.selectItemByIndex(0);
+        else mLocSpinner.selectItemByIndex(1);
 
-        mLocSpinner.setOnSpinnerItemSelectedListener((parent1, view, position, id) -> {
-            String s =(String) parent1.getItemAtPosition(position);
-            mOnClick.onItemClicked(s, parent1.getId(), null);
+        mLocSpinner.setOnSpinnerItemSelectedListener((OnSpinnerItemSelectedListener<String>) (i, s) -> {
+            mOnClick.onItemClicked(s, mLocSpinner.getId(), null);
         });
     }
 

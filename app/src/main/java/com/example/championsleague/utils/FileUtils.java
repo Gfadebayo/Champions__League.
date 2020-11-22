@@ -1,11 +1,19 @@
 package com.example.championsleague.utils;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 import android.os.Environment;
+
+import com.example.championsleague.models.TeamEmpty;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -16,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,6 +38,7 @@ public class FileUtils {
     public static final String TEAMS_LOGO_DIR = "team logos";
     private final static ExecutorService service = Executors.newCachedThreadPool();
     public static final String EXISTING_TEAMS_DIR = "existing_teams.txt";
+    public static final String LOCAL_TEAM_FILE = "teams.json";
 
     public static void transferToDisk(final AssetManager manager, final File saveDir) {
 
@@ -192,29 +200,109 @@ public class FileUtils {
         else return image.delete();
     }
 
-    public static void saveImages(final File saveDir, final Map<String, String> teamLogos){
+    public static void saveImages(final File saveDir, final List<TeamEmpty> teamLogos){
         service.submit(() -> {
             OkHttpClient client = new OkHttpClient();
 
-            for(String team : teamLogos.keySet()){
+
+
+            for(TeamEmpty team : teamLogos){
 
                 try {
-                    File saveFile = new File(saveDir, team + ".png");
+                    String urlStr = team.getCrestUrl();
+                    if(urlStr.isEmpty()) continue;
+
+                    String extension = urlStr.substring(urlStr.lastIndexOf('.'));
+
+                    File saveFile = new File(saveDir, team.getName() + extension);
                     if(saveFile.exists() && saveFile.length() > 1) return;
                     saveFile.createNewFile();
 
 
-                    Request url = new Request.Builder().url(HttpUrl.parse(teamLogos.get(team))).build();
+                    Request url = new Request.Builder().url(HttpUrl.parse(urlStr)).build();
 
                     ResponseBody execute = client.newCall(url).execute().body();
                     FileOutputStream out = new FileOutputStream(saveFile);
                     out.write(execute.bytes());
                     out.close();
-
-
-
                 }catch(IOException ioe){ioe.printStackTrace();}
             }
         });
+    }
+
+    public static Map<String, List<TeamEmpty>> getLocalTeams(Context dir){
+        File local = dir.getExternalFilesDir(LOCAL_TEAM_FILE);
+        Map<String, List<TeamEmpty>> result = new HashMap<>();
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(local));
+            String nextLine = "";
+            StringBuilder jsonBuilder = new StringBuilder();
+            while((nextLine = reader.readLine()) != null){
+                jsonBuilder.append(nextLine);
+            }
+
+            JSONObject jsonObject = new JSONObject(jsonBuilder.toString());
+            JSONArray teamArray = jsonObject.getJSONArray("Local");
+
+            result.put("Local", createLocalTeams(teamArray));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    private static List<TeamEmpty> createLocalTeams(JSONArray array){
+        List<TeamEmpty> empty = new ArrayList<>();
+
+        try {
+        for(int i = 0; i < array.length(); i++){
+
+                String teamName = array.getString(i);
+                empty.add(new TeamEmpty(0, teamName, teamName, ""));
+        }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return empty;
+    }
+
+    public static void transformTxTtoJson(Context saveDir){
+
+        File dir = saveDir.getExternalFilesDir(EXISTING_TEAMS_DIR);
+        List<String> teams = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(dir));
+            String nextLine = "";
+            while((nextLine = reader.readLine()) != null){
+                if(!nextLine.contains("Others")) teams.add(nextLine);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+        JSONArray array = new JSONArray(teams);
+        JSONObject obj = new JSONObject();
+
+        obj.put("Local", array);
+
+            String s = obj.toString(4);
+
+            new FileOutputStream(new File(dir.getParent(), LOCAL_TEAM_FILE)).write(s.getBytes());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

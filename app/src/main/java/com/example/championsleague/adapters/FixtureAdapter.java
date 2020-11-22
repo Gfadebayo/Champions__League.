@@ -18,7 +18,7 @@ import com.example.championsleague.database.LeagueRepository;
 import com.example.championsleague.databinding.ListFixturesBinding;
 import com.example.championsleague.fragments.FixtureFragment;
 import com.example.championsleague.models.FixtureInfo;
-import com.example.championsleague.models.LeagueInfo;
+import com.example.championsleague.utils.LeagueUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -133,7 +133,7 @@ public class FixtureAdapter extends ListAdapter<FixtureInfo, FixtureAdapter.View
 
                 int index = getCurrentList().indexOf(fixture);
 
-                LeagueInfo.updateDb(fixture, mRepository, true);
+                LeagueUtils.updateDb(fixture, mRepository, true);
                 List<FixtureInfo> mutate = new ArrayList<>(getCurrentList());
                 mutate.remove(index);
                 submitList(mutate);

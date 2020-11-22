@@ -56,6 +56,7 @@ public class FixtureInfo extends BaseObservable implements Comparable {
         leg = fixtureLeg;
         date = System.currentTimeMillis();
 
+
 //        this.fixtureNo = fixtureNo;
     }
 

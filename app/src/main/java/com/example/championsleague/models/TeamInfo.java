@@ -43,7 +43,7 @@ public class TeamInfo implements Comparable {
     private int draws;
 
     @Ignore
-    private Bitmap Logo;
+    private String logo;
 
     public TeamInfo(){}
 
@@ -101,12 +101,10 @@ public class TeamInfo implements Comparable {
     }
 
     public void incrementPoint(int amount){
-
         points +=amount;
     }
 
     public void incrementGoalDiff(int amount){
-
         goal_diff +=amount;
     }
 
@@ -134,10 +132,12 @@ public class TeamInfo implements Comparable {
         this.draws = draws;
     }
 
-    public Bitmap getLogo(){return Logo;}
+    public String getLogo() {
+        return logo;
+    }
 
-    public void setLogo(Bitmap newLogo){
-        Logo = newLogo;
+    public void setLogo(String logo) {
+        this.logo = logo;
     }
 
     @Override

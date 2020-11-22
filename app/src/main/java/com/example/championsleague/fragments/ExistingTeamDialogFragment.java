@@ -12,11 +12,16 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.ConcatAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.championsleague.R;
-import com.example.championsleague.ServiceApi;
-import com.example.championsleague.adapters.WebRecyclerAdapter;
+import com.example.championsleague.internet.FootballApi;
+import com.example.championsleague.adapters.LeagueAdapter;
+import com.example.championsleague.internet.Repository;
+import com.example.championsleague.models.League;
+import com.example.championsleague.models.TeamEmpty;
+import com.example.championsleague.models.TeamInfo;
 import com.example.championsleague.utils.FileUtils;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
@@ -30,21 +35,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 
-public class ExistingTeamDialogFragment extends BottomSheetDialogFragment implements Callback<ResponseBody> {
+public class ExistingTeamDialogFragment extends BottomSheetDialogFragment {
 
     public static final String TAG = "ExistingTeams";
-    private WebRecyclerAdapter mAdapter;
+    private LeagueAdapter mAdapter;
     private RecyclerView mRecyclerView;
-    private ServiceApi mServiceApi;
+    private FootballApi mServiceApi;
     private List<String> mAllowedCountries;
+    private Repository mRepo;
 
     public static ExistingTeamDialogFragment getInstance() {
         return new ExistingTeamDialogFragment();
@@ -55,6 +64,7 @@ public class ExistingTeamDialogFragment extends BottomSheetDialogFragment implem
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
 
+        mRepo = Repository.Companion.getInstance(requireActivity());
         Toast.makeText(requireContext(), "Fetching Teams, Please Wait", Toast.LENGTH_SHORT).show();
     }
 
@@ -66,142 +76,68 @@ public class ExistingTeamDialogFragment extends BottomSheetDialogFragment implem
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        pref();
 
         view.findViewById(R.id.button_teams_submit).setOnClickListener(v -> {
-            Map<String, String> teams = mAdapter.getChosenTeams();
-            ((TeamSelectionFragment) getParentFragment()).addToList(teams.keySet());
+
+            List<TeamEmpty> teams = ((ConcatAdapter) mRecyclerView.getAdapter()).getAdapters().stream()
+                    .flatMap((Function<RecyclerView.Adapter<? extends RecyclerView.ViewHolder>, Stream<TeamEmpty>>)
+                            adapter -> ((LeagueAdapter) adapter).getSelectedTeams().stream()).collect(Collectors.toList());
+
+            ((TeamSelectionFragment) getParentFragment()).addToList(teams.stream().map(TeamEmpty::getName).collect(Collectors.toList()));
             FileUtils.saveImages(requireContext().getExternalFilesDir(FileUtils.TEAMS_LOGO_DIR), teams);
             dismiss();
         });
 
         mRecyclerView = view.findViewById(R.id.recycler_test);
 
-        mAdapter = new WebRecyclerAdapter(this);
+        ConcatAdapter adapter = new ConcatAdapter(createLocalLeagueAdapter());
+        mRecyclerView.setAdapter(adapter);
 
-        mRecyclerView.setAdapter(mAdapter);
 
-        addLocalTeams();
+        mRepo.getLeagues().observeOn(AndroidSchedulers.mainThread()).doOnNext(leagues -> {
+            leagues.forEach(league -> {
+                        LeagueAdapter ad = new LeagueAdapter(ExistingTeamDialogFragment.this, league);
+                        ad.setOnHeaderClickedAction(integer -> fetchTeams(integer, ad));
+
+                        ((ConcatAdapter) mRecyclerView.getAdapter()).addAdapter(ad);
+                    });
+        }).subscribe();
+
+//        addLocalTeams();
         //To avoid fetching every time the dialog is opened
-        if (mAdapter.getItemCount() <= 1) {
-
-            Retrofit fit = new Retrofit.Builder().baseUrl("https://soccerway.com/")
-                    .build();
-
-            mServiceApi = fit.create(ServiceApi.class);
-
-            mServiceApi.move().enqueue(ExistingTeamDialogFragment.this);
-        }
     }
 
-    private void addLocalTeams() {
-        File dir = requireContext().getExternalFilesDir(FileUtils.EXISTING_TEAMS_DIR);
-        Map<String, List<String>> teamMap = FileUtils.readExistingTeamsFromFile(dir);
-        String country = new ArrayList<>(teamMap.keySet()).get(0);
-        mAdapter.addCountry(country);
+    private LeagueAdapter createLocalLeagueAdapter(){
+        Map<String, List<TeamEmpty>> localTeams = FileUtils.getLocalTeams(requireContext());
+        String league = new ArrayList<>(localTeams.keySet()).get(0);
 
-        //Create a little space so VH can be created before we call it
-        new Handler().postDelayed(() -> {
-            int index = mAdapter.pathPosition(country);
-            Log.i(TAG, String.valueOf(index));
-            index = (int) mAdapter.getItemId(index);
-            WebRecyclerAdapter.ViewHolder ada = (WebRecyclerAdapter.ViewHolder) mRecyclerView.findViewHolderForItemId(index);
-            teamMap.get(country).forEach(t -> ada.addTeam(t, null));
-        }, 1000);
+        LeagueAdapter adapter = new LeagueAdapter(this, new League(-1, league, league));
+        adapter.setTeams(localTeams.get(league));
+
+        return adapter;
     }
 
-    private void pref() {
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        mAllowedCountries = Arrays.asList(settings.getString("KEY_LEAGUE", "").split(","));
-        mAllowedCountries.forEach(String::toLowerCase);
-
-        mAllowedCountries = mAllowedCountries.stream().map(String::toLowerCase).collect(Collectors.toList());
+    private void fetchTeams(int competitionId, LeagueAdapter adapter){
+//        mRepo.getTeams(competitionId);
+        if(competitionId == -1) return;
+        mRepo.getTeams(competitionId).observeOn(AndroidSchedulers.mainThread()).doOnNext(teamInfos -> {
+            adapter.setTeams(teamInfos);
+        }).subscribe();
     }
 
-    @Override
-    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-        String path = call.request().url().encodedPath();
-
-        if (response.isSuccessful()) {
-
-            try {
-                Document parse = Jsoup.parse(response.body().string());
-
-                if (path.contains("club-teams")) getCountries(parse);
-                else if (path.contains("national/") && !path.contains("table"))
-                    resolveCountries(parse);
-                else if (path.contains("tables")) getTeams(parse);
-                else resolveTeams(parse);
-
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
-        }
-
-    }
-
-    private void getCountries(Document parse) {
-
-        parse.body().getElementsByAttributeValue("class", "expandable").forEach(c -> {
-            String attr = c.getElementsByTag("a").attr("href");
-            if (mAllowedCountries.contains(attr.split("/")[2])) {
-                mServiceApi.next(attr).enqueue(this);
-
-            }
-        });
-    }
-
-    private void resolveCountries(Document parse) {
-        final StringBuilder league = new StringBuilder();
-
-        Elements strea = parse.body().getElementsByAttributeValue("id", "subheading");
-
-        strea.stream().limit(1).forEach(c -> league.append(c.getElementsByTag("h1").text()));
-
-        //country name
-        Elements aClass = parse.body().getElementsByAttributeValue("class", "header-label");
-        String text = "(" + aClass.text().split("\\s+")[0] + ")";
-        league.append(text);
-
-        parse.body().getElementsByAttributeValue("class", "current").forEach(c -> {
-
-            String link = c.getElementsByTag("a").attr("href").concat("tables/");
-            mAdapter.addCountry(league.toString());
-            addLocalTeams();
-            mServiceApi.next(link).enqueue(this);
-        });
-
-    }
-
-    private void getTeams(Document parse) {
-
-        parse.body().getElementsByAttributeValue("class", "leaguetable sortable table detailed-table")
-                .forEach(c -> c.getElementsByAttributeValue("class", "text team large-link").forEach(el -> {
-                    String attr = el.getElementsByTag("a").attr("href");
-                    mServiceApi.next(attr).enqueue(this);
-                }));
-    }
-
-    private void resolveTeams(Document parse) {
-
-        String path = parse.body().getElementsContainingOwnText("Country").next().text();
-
-        parse.body().getElementsByAttributeValue("class", "logo").forEach(el -> el.getElementsByTag("img").forEach(c -> {
-            String logo = c.attr("src");
-            String alt = c.attr("alt");
-
-            int pos = mAdapter.pathPosition(path);
-            WebRecyclerAdapter.ViewHolder holder = (WebRecyclerAdapter.ViewHolder) mRecyclerView.findViewHolderForAdapterPosition(pos);
-
-            holder.addTeam(alt, logo);
-        }));
-    }
-
-    @Override
-    public void onFailure(Call<ResponseBody> call, Throwable t) {
-        t.printStackTrace();
-        if(isVisible())
-            Toast.makeText(requireActivity(), t.getMessage() + ": retrying", Toast.LENGTH_SHORT).show();
-
-    }
+//    private void addLocalTeams() {
+//        File dir = requireContext().getExternalFilesDir(FileUtils.EXISTING_TEAMS_DIR);
+//        Map<String, List<String>> teamMap = FileUtils.readExistingTeamsFromFile(dir);
+//        String country = new ArrayList<>(teamMap.keySet()).get(0);
+//        mAdapter.addCountry(country);
+//
+//        //Create a little space so VH can be created before we call it
+//        new Handler().postDelayed(() -> {
+//            int index = mAdapter.pathPosition(country);
+//            Log.i(TAG, String.valueOf(index));
+//            index = (int) mAdapter.getItemId(index);
+//            LeagueAdapter.BodyViewHolder ada = (LeagueAdapter.BodyViewHolder) mRecyclerView.findViewHolderForItemId(index);
+//            teamMap.get(country).forEach(t -> ada.addTeam(t, null));
+//        }, 1000);
+//    }
 }
